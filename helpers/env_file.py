@@ -22,4 +22,16 @@ def get_env_config():
         print("TWITTER_LOGIN_PASSWORD is not set !")
         exit(0)
 
+    try:
+        env("TWITTER_BEARER_AUTH")
+    except EnvError:
+        print("TWITTER_BEARER_AUTH is not set !")
+        exit(0)
+
+    try:
+        env("DISCORD_BOT_TOKEN")
+    except EnvError:
+        print("DISCORD_BOT_TOKEN is not set !")
+        exit(0)
+
     return env
