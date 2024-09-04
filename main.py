@@ -1,7 +1,7 @@
 import asyncio
 from playwright.async_api import async_playwright, Playwright
 
-from twitter import connect, create_driver, get_last_following_from_user
+from twitter import connect, create_driver, get_last_following_from_user, get_last_followings_from_user, get_headers
 from helpers import open_json
 
 async def run(playwright: Playwright):
@@ -11,7 +11,7 @@ async def run(playwright: Playwright):
     if not cookies:
         cookies = await connect(page)
     await page.context.add_cookies(cookies)
-    await get_last_following_from_user(page, "STTRANGE_MAN")
+    await get_last_followings_from_user(page)
 
 async def main():
     async with async_playwright() as playwright:
