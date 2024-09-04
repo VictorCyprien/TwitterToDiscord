@@ -1,7 +1,8 @@
+from typing import List, Dict
 import json
 from json import JSONDecodeError
 
-def open_json(filename: str):
+def open_json(filename: str) -> List[Dict]:
     try:
         with open(filename, 'r') as file:
             data = json.load(file)
