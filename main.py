@@ -4,7 +4,7 @@ from playwright.async_api import async_playwright, Playwright
 
 from discord.ext import commands, tasks
 
-from twitter import connect, create_driver, get_last_following_from_user, get_last_followings_from_user
+from twitter import connect, create_driver, get_last_followings_from_user
 from helpers import open_json, save_json, get_env_config, Logger
 
 logger = Logger()
