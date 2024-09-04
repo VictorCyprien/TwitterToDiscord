@@ -1,3 +1,4 @@
+from typing import Dict, List
 import asyncio
 import requests
 from bs4 import BeautifulSoup
@@ -26,7 +27,7 @@ async def get_last_following_from_user(page: Page, user: str):
     return last_following
 
 
-async def get_last_followings_from_user(page: Page):
+async def get_last_followings_from_user(user_id: int) -> List[Dict]:
     cookies = open_json("cookies.json")
     cookies_dict = {}
     for one_cookie in cookies:
@@ -39,7 +40,6 @@ async def get_last_followings_from_user(page: Page):
         "x-csrf-token": cookies_dict["ct0"]
     }
 
-    user_id = 3304410599
     url = f"https://x.com/i/api/graphql/0yD6Eiv23DKXRDU9VxlG2A/Following?variables=%7B%22userId%22%3A%22{user_id}%22%2C%22count%22%3A50%2C%22includePromotedContent%22%3Afalse%7D&features=%7B%22responsive_web_graphql_exclude_directive_enabled%22%3Atrue%2C%22verified_phone_label_enabled%22%3Afalse%2C%22creator_subscriptions_tweet_preview_api_enabled%22%3Atrue%2C%22responsive_web_graphql_timeline_navigation_enabled%22%3Atrue%2C%22responsive_web_graphql_skip_user_profile_image_extensions_enabled%22%3Afalse%2C%22c9s_tweet_anatomy_moderator_badge_enabled%22%3Atrue%2C%22tweetypie_unmention_optimization_enabled%22%3Atrue%2C%22responsive_web_edit_tweet_api_enabled%22%3Atrue%2C%22graphql_is_translatable_rweb_tweet_is_translatable_enabled%22%3Atrue%2C%22view_counts_everywhere_api_enabled%22%3Atrue%2C%22longform_notetweets_consumption_enabled%22%3Atrue%2C%22responsive_web_twitter_article_tweet_consumption_enabled%22%3Afalse%2C%22tweet_awards_web_tipping_enabled%22%3Afalse%2C%22freedom_of_speech_not_reach_fetch_enabled%22%3Atrue%2C%22standardized_nudges_misinfo%22%3Atrue%2C%22tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled%22%3Atrue%2C%22rweb_video_timestamps_enabled%22%3Atrue%2C%22longform_notetweets_rich_text_read_enabled%22%3Atrue%2C%22longform_notetweets_inline_media_enabled%22%3Atrue%2C%22responsive_web_media_download_video_enabled%22%3Afalse%2C%22responsive_web_enhance_cards_enabled%22%3Afalse%7D"
 
     res = requests.get(url=url, cookies=cookies_dict, headers=headers)
@@ -49,4 +49,4 @@ async def get_last_followings_from_user(page: Page):
     logger.info("Data saved !")
 
     filtred_data = filter_empty_data(data)
-    extract_users_data(filtred_data)
+    return extract_users_data(filtred_data)
