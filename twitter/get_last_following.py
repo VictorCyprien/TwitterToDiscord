@@ -1,9 +1,5 @@
 from typing import Dict, List
-import asyncio
 import requests
-from bs4 import BeautifulSoup
-
-from playwright.async_api import Page
 
 from helpers import open_json, get_env_config, save_json, Logger
 from json_helpers import extract_users_data, filter_empty_data
