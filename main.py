@@ -1,7 +1,7 @@
 import asyncio
 from playwright.async_api import async_playwright, Playwright
 
-from twitter import connect, create_driver, get_last_following_from_user, get_last_followings_from_user, get_headers
+from twitter import connect, create_driver, get_last_following_from_user, get_last_followings_from_user
 from helpers import open_json
 
 async def run(playwright: Playwright):
