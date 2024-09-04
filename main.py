@@ -23,7 +23,7 @@ async def run(playwright: Playwright, user_id: int):
     page = await browser.new_page()
     cookies = open_json("cookies.json")
     if not cookies:
-        cookies = await connect(page)
+        await connect(page)
     return await get_last_followings_from_user(user_id)
 
 
