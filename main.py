@@ -106,6 +106,7 @@ async def check_new_following():
             except IndexError:
                 logger.info(f"The user {username} follow nobody right now, searching for next person...")
                 continue
+            
             if last_following == latest_following:
                 logger.info(f"Nothing new for {username}, searching for next person...")
                 continue
