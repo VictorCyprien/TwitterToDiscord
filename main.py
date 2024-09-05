@@ -59,7 +59,6 @@ async def add_twitter_profile(interaction: discord.Interaction, profil_name: str
 
 
     user_id = await get_user_id_with_username(profil_name)
-    print(user_id)
     if user_id is None:
         await interaction.response.send_message(f"Le profil {profil_name} n'a pas été trouvé sur Twitter.")
         return
@@ -80,7 +79,7 @@ async def remove_twitter_profile(interaction: discord.Interaction, profil_name: 
     for one_user in data:
         for user_id in one_user.keys():
             if one_user[user_id]["username"] == profil_name:
-                del data[user_id]
+                del data[0][user_id]
                 save_json("accounts_data.json", data)
                 await interaction.response.send_message(f"Le profile de {profil_name} a été retiré !")
                 return
