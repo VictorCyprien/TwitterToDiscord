@@ -106,7 +106,7 @@ async def check_new_following():
             except IndexError:
                 logger.info(f"The user {username} follow nobody right now, searching for next person...")
                 continue
-            
+
             if last_following == latest_following:
                 logger.info(f"Nothing new for {username}, searching for next person...")
                 continue
@@ -124,5 +124,3 @@ async def check_new_following():
 
 env = get_env_config()
 client.run(env("DISCORD_BOT_TOKEN"))
-
-# TODO : Ajout commande pour ajouter/supprimer les profils ciblés => GraphQL quand on tape le username
