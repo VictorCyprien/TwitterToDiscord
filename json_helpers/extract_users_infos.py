@@ -35,25 +35,23 @@ def extract_users_data(data: Dict) -> List[Dict]:
     list_user = glom(data, entries_path)
     final_list_user = []
     for one_user in list_user:
-        user_id = glom(one_user, f"{content_path}.rest_id")
-        username = glom(one_user, f"{content_path}.legacy.screen_name")
-        name = glom(one_user, f"{content_path}.legacy.name")
-        description = glom(one_user, f"{content_path}.legacy.description")
-        profile_image = glom(one_user, f"{content_path}.legacy.profile_image_url_https")
-        created_at = glom(one_user, f"{content_path}.legacy.created_at")
-        followers_number = glom(one_user, f"{content_path}.legacy.followers_count")
-        tweets_count = glom(one_user, f"{content_path}.legacy.statuses_count")
+        username = glom(one_user, f"{content_path}.legacy.screen_name", skip_exc=KeyError, default=None)
+        name = glom(one_user, f"{content_path}.legacy.name", skip_exc=KeyError, default=None)
+        description = glom(one_user, f"{content_path}.legacy.description", skip_exc=KeyError, default=None)
+        profile_image = glom(one_user, f"{content_path}.legacy.profile_image_url_https", skip_exc=KeyError, default=None)
+        created_at = glom(one_user, f"{content_path}.legacy.created_at", skip_exc=KeyError, default=None)
+        followers_number = glom(one_user, f"{content_path}.legacy.followers_count", skip_exc=KeyError, default=None)
+        tweets_count = glom(one_user, f"{content_path}.legacy.statuses_count", skip_exc=KeyError, default=None)
         
-        list_urls = glom(one_user, f"{content_path}.legacy.entities")
+        list_urls = glom(one_user, f"{content_path}.legacy.entities", skip_exc=KeyError, default=None)
         urls = extract_urls(list_urls)
 
         current_user = {
-            "user_id": user_id,
             "username": username,
             "name": name,
             "description": description,
             "profile_image": profile_image,
-            "created_at": datetime.strptime(created_at, '%a %b %d %H:%M:%S %z %Y').strftime('%d/%m/%Y'),
+            "created_at": datetime.strptime(created_at, '%a %b %d %H:%M:%S %z %Y').strftime('%d/%m/%Y') if created_at is not None else None,
             "followers_number": followers_number,
             "tweets_count": tweets_count
         }
