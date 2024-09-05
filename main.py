@@ -80,6 +80,4 @@ async def check_new_following():
 env = get_env_config()
 client.run(env("DISCORD_BOT_TOKEN"))
 
-
-# TODO : Ajout de la liste des derniers abonnements de la personnes (lien csv)
 # TODO : Ajout commande pour ajouter/supprimer les profils ciblés => GraphQL quand on tape le username
