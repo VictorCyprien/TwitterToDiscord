@@ -4,7 +4,9 @@ from playwright.async_api import async_playwright, Playwright
 from discord.ext import commands, tasks
 
 from twitter import connect, create_driver, get_last_followings_from_user
-from helpers import open_json, save_json, get_env_config, Logger
+from helpers import open_json, save_json, get_env_config, create_excel_file, clean_file, Logger
+from discord_helpers import build_msg, send_msg
+
 
 logger = Logger()
 
@@ -51,26 +53,33 @@ async def check_new_following():
 
     for index, one_user in enumerate(current_user_data):
         for user_id, user_data in one_user.items():
-            username = user_data["name"]
+            username = user_data["username"]
             latest_following = user_data["latest_following"]
             discord_channel_id = user_data["notifying_discord_channel"]
 
             async with async_playwright() as playwright:
-                data = await run(playwright, user_id)
+                data_from_twitter = await run(playwright, user_id)
                 logger.info(f"Data retrived for {username}")
 
-            last_following = data[0]["username"]
-            if last_following != latest_following:
-                logger.info(f"New follower !\nPosting to channel...")
-                user_data["latest_following"] = last_following
-                save_json("accounts_data.json", current_user_data)
+            last_following = data_from_twitter[0]["username"]
+            if last_following == latest_following:
+                logger.info(f"Nothing new for {username}, searching for next person...")
+                continue
 
-                discord_channel = client.get_channel(discord_channel_id)
-                await discord_channel.send(f"{username} vient d'ajouter {last_following} dans sa liste d'abonnement !")
-                logger.info("Msg send to discord !")
-            else:
-                logger.info("Nothing new, searching for next person...")
+            logger.info(f"New follower !\nPosting to channel...")
+            user_data["latest_following"] = last_following
+            save_json("accounts_data.json", current_user_data)
+            embed = await build_msg(client, data_from_twitter[0], user_data["username"])
+            user_excel_data = f"{username}'s following.xlsx"
+            await create_excel_file(data_from_twitter, user_excel_data)
+            logger.info("Excel file created !")
+            await send_msg(client, embed, user_excel_data, discord_channel_id)
+            await clean_file(user_excel_data)
 
 
 env = get_env_config()
 client.run(env("DISCORD_BOT_TOKEN"))
+
+
+# TODO : Ajout de la liste des derniers abonnements de la personnes (lien csv)
+# TODO : Ajout commande pour ajouter/supprimer les profils ciblés => GraphQL quand on tape le username
