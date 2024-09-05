@@ -1,3 +1,4 @@
+from typing import Dict
 import discord
 from playwright.async_api import async_playwright, Playwright
 
@@ -49,13 +50,13 @@ async def talk(interaction: discord.Interaction):
 
 @client.tree.command(name="add_twitter_profile")
 async def add_twitter_profile(interaction: discord.Interaction, profil_name: str, discord_channel: discord.TextChannel = None):
-    data = open_json("accounts_data.json")
+    data: Dict = open_json("accounts_data.json")
 
-    for one_user in data:
-        for user_id in one_user.keys():
-            if one_user[f"{user_id}"]["username"] == profil_name:
-                await interaction.response.send_message(f"La profil de {profil_name} est déjà dans mon répertoire !")
-                return
+
+    for user_id in data.keys():
+        if data[user_id]["username"] == profil_name:
+            await interaction.response.send_message(f"La profil de {profil_name} est déjà dans mon répertoire !")
+            return
 
 
     user_id = await get_user_id_with_username(profil_name)
@@ -63,10 +64,10 @@ async def add_twitter_profile(interaction: discord.Interaction, profil_name: str
         await interaction.response.send_message(f"Le profil {profil_name} n'a pas été trouvé sur Twitter.")
         return
 
-    data[0][str(user_id)] = {}
-    data[0][str(user_id)]["username"] = profil_name
-    data[0][str(user_id)]["latest_following"] = ""
-    data[0][str(user_id)]["notifying_discord_channel"] = discord_channel.id if discord_channel is not None else 697858472548761692
+    data[str(user_id)] = {}
+    data[str(user_id)]["username"] = profil_name
+    data[str(user_id)]["latest_following"] = ""
+    data[str(user_id)]["notifying_discord_channel"] = discord_channel.id if discord_channel is not None else 697858472548761692
 
     save_json("accounts_data.json", data)
     await interaction.response.send_message(f"Le profil de {profil_name} a été ajouté !")
@@ -74,15 +75,14 @@ async def add_twitter_profile(interaction: discord.Interaction, profil_name: str
 
 @client.tree.command(name="remove_twitter_profile")
 async def remove_twitter_profile(interaction: discord.Interaction, profil_name: str):
-    data = open_json("accounts_data.json")
+    data: dict = open_json("accounts_data.json")
 
-    for one_user in data:
-        for user_id in one_user.keys():
-            if one_user[user_id]["username"] == profil_name:
-                del data[0][user_id]
-                save_json("accounts_data.json", data)
-                await interaction.response.send_message(f"Le profil de {profil_name} a été retiré !")
-                return
+    for user_id in data.keys():
+        if data[user_id]["username"] == profil_name:
+            del data[user_id]
+            save_json("accounts_data.json", data)
+            await interaction.response.send_message(f"Le profil de {profil_name} a été retiré !")
+            return
         
     await interaction.response.send_message(f"Le profil de {profil_name} n'est pas dans la liste.")
 
@@ -91,35 +91,34 @@ async def remove_twitter_profile(interaction: discord.Interaction, profil_name: 
 async def check_new_following():
     current_user_data = open_json("accounts_data.json")
 
-    for one_user in current_user_data:
-        for user_id, user_data in one_user.items():
-            username = user_data["username"]
-            latest_following = user_data["latest_following"]
-            discord_channel_id = user_data["notifying_discord_channel"]
+    for user_id, user_data in current_user_data.items():
+        username = user_data["username"]
+        latest_following = user_data["latest_following"]
+        discord_channel_id = user_data["notifying_discord_channel"]
 
-            async with async_playwright() as playwright:
-                data_from_twitter = await run(playwright, user_id)
-                logger.info(f"Data retrived for {username}")
+        async with async_playwright() as playwright:
+            data_from_twitter = await run(playwright, user_id)
+            logger.info(f"Data retrived for {username}")
 
-            try:
-                last_following = data_from_twitter[0]["username"]
-            except IndexError:
-                logger.info(f"The user {username} follow nobody right now, searching for next person...")
-                continue
+        try:
+            last_following = data_from_twitter[0]["username"]
+        except IndexError:
+            logger.info(f"The user {username} follow nobody right now, searching for next person...")
+            continue
 
-            if last_following == latest_following:
-                logger.info(f"Nothing new for {username}, searching for next person...")
-                continue
+        if last_following == latest_following:
+            logger.info(f"Nothing new for {username}, searching for next person...")
+            continue
 
-            logger.info(f"New follower !\nPosting to channel...")
-            user_data["latest_following"] = last_following
-            save_json("accounts_data.json", current_user_data)
-            embed = await build_msg(client, data_from_twitter[0], user_data["username"])
-            user_excel_data = f"{username}'s following.xlsx"
-            await create_excel_file(data_from_twitter, user_excel_data)
-            logger.info("Excel file created !")
-            await send_msg(client, embed, user_excel_data, discord_channel_id)
-            await clean_file(user_excel_data)
+        logger.info(f"New follower !\nPosting to channel...")
+        user_data["latest_following"] = last_following
+        save_json("accounts_data.json", current_user_data)
+        embed = await build_msg(client, data_from_twitter[0], user_data["username"])
+        user_excel_data = f"{username}'s following.xlsx"
+        await create_excel_file(data_from_twitter, user_excel_data)
+        logger.info("Excel file created !")
+        await send_msg(client, embed, user_excel_data, discord_channel_id)
+        await clean_file(user_excel_data)
 
 
 env = get_env_config()
