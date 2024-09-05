@@ -3,7 +3,7 @@ from playwright.async_api import async_playwright, Playwright
 
 from discord.ext import commands, tasks
 
-from twitter import connect, create_driver, get_last_followings_from_user
+from twitter import connect, create_driver, get_last_followings_from_user, get_user_id_with_username
 from helpers import open_json, save_json, get_env_config, create_excel_file, clean_file, Logger
 from discord_helpers import build_msg, send_msg
 
@@ -33,8 +33,8 @@ async def on_ready():
     await client.wait_until_ready()
     logger.info("Twitter2DiscordBot en ligne !")
     try:
-        #synced = await client.tree.sync()
-        #logger.info(f"Synced : {len(synced)} command(s) !")
+        # synced = await client.tree.sync()
+        # logger.info(f"Synced : {len(synced)} command(s) !")
         check_new_following.start()
     except Exception as e:
         logger.info(e)
@@ -47,11 +47,52 @@ async def talk(interaction: discord.Interaction):
     await interaction.response.send_message("Hello !")
 
 
+@client.tree.command(name="add_twitter_profile")
+async def add_twitter_profile(interaction: discord.Interaction, profil_name: str, discord_channel: discord.TextChannel = None):
+    data = open_json("accounts_data.json")
+
+    for one_user in data:
+        for user_id in one_user.keys():
+            if one_user[f"{user_id}"]["username"] == profil_name:
+                await interaction.response.send_message(f"La profil de {profil_name} est déjà dans mon répertoire !")
+                return
+
+
+    user_id = await get_user_id_with_username(profil_name)
+    print(user_id)
+    if user_id is None:
+        await interaction.response.send_message(f"Le profil {profil_name} n'a pas été trouvé sur Twitter.")
+        return
+
+    data[0][str(user_id)] = {}
+    data[0][str(user_id)]["username"] = profil_name
+    data[0][str(user_id)]["latest_following"] = ""
+    data[0][str(user_id)]["notifying_discord_channel"] = discord_channel.id if discord_channel is not None else 697858472548761692
+
+    save_json("accounts_data.json", data)
+    await interaction.response.send_message(f"Le profil de {profil_name} a été ajouté !")
+
+
+@client.tree.command(name="remove_twitter_profile")
+async def remove_twitter_profile(interaction: discord.Interaction, profil_name: str):
+    data = open_json("accounts_data.json")
+
+    for one_user in data:
+        for user_id in one_user.keys():
+            if one_user[user_id]["username"] == profil_name:
+                del data[user_id]
+                save_json("accounts_data.json", data)
+                await interaction.response.send_message(f"Le profile de {profil_name} a été retiré !")
+                return
+        
+    await interaction.response.send_message(f"Le profile de {profil_name} n'est pas dans la liste.")
+
+
 @tasks.loop(seconds=10)
 async def check_new_following():
     current_user_data = open_json("accounts_data.json")
 
-    for index, one_user in enumerate(current_user_data):
+    for one_user in current_user_data:
         for user_id, user_data in one_user.items():
             username = user_data["username"]
             latest_following = user_data["latest_following"]
