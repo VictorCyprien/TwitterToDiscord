@@ -101,7 +101,11 @@ async def check_new_following():
                 data_from_twitter = await run(playwright, user_id)
                 logger.info(f"Data retrived for {username}")
 
-            last_following = data_from_twitter[0]["username"]
+            try:
+                last_following = data_from_twitter[0]["username"]
+            except IndexError:
+                logger.info(f"The user {username} follow nobody right now, searching for next person...")
+                continue
             if last_following == latest_following:
                 logger.info(f"Nothing new for {username}, searching for next person...")
                 continue
