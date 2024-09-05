@@ -87,7 +87,7 @@ async def remove_twitter_profile(interaction: discord.Interaction, profil_name: 
     await interaction.response.send_message(f"Le profil de {profil_name} n'est pas dans la liste.")
 
 
-@tasks.loop(seconds=10)
+@tasks.loop(seconds=30)
 async def check_new_following():
     current_user_data = open_json("accounts_data.json")
 
