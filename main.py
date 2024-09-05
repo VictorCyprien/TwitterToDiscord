@@ -81,7 +81,7 @@ async def remove_twitter_profile(interaction: discord.Interaction, profil_name: 
             if one_user[user_id]["username"] == profil_name:
                 del data[0][user_id]
                 save_json("accounts_data.json", data)
-                await interaction.response.send_message(f"Le profile de {profil_name} a été retiré !")
+                await interaction.response.send_message(f"Le profil de {profil_name} a été retiré !")
                 return
         
     await interaction.response.send_message(f"Le profil de {profil_name} n'est pas dans la liste.")
