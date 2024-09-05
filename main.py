@@ -84,7 +84,7 @@ async def remove_twitter_profile(interaction: discord.Interaction, profil_name: 
                 await interaction.response.send_message(f"Le profile de {profil_name} a été retiré !")
                 return
         
-    await interaction.response.send_message(f"Le profile de {profil_name} n'est pas dans la liste.")
+    await interaction.response.send_message(f"Le profil de {profil_name} n'est pas dans la liste.")
 
 
 @tasks.loop(seconds=10)
