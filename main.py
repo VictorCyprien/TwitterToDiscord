@@ -162,23 +162,23 @@ async def check_new_following():
 
         async with async_playwright() as playwright:
             data_from_twitter = await run(playwright, user_id)
-            logger.info(f"Data retrived for {username}")
 
         try:
             last_following = data_from_twitter[0]["username"]
         except IndexError:
-            logger.info(f"The user {username} follow nobody right now, searching for next person...")
+            logger.warning(f"The user {username} follow nobody right now, searching for next person...")
             continue
 
         if last_following == latest_following:
-            logger.info(f"Nothing new for {username}, searching for next person...")
+            logger.warning(f"Nothing new for {username}, searching for next person...")
             continue
 
-        logger.info(f"New follower !\nPosting to channel...")
+        logger.info(f"New follower for {username} !\nPosting to channel...")
         user_data["latest_following"] = last_following
         save_json("accounts_data.json", current_user_data)
-        embed = await build_msg(client, data_from_twitter[0], user_data["username"])
+        embed = await build_msg(data_from_twitter[0], user_data["username"])
         await send_msg(client, discord_channel_id, embed)
+        logger.info("Message sended !")
     
     await set_activity_type(client, Activity.PLAYING, "trade du $MAD")
 
