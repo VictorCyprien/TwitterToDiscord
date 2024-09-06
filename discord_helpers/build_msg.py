@@ -1,13 +1,8 @@
 from typing import Dict
 import discord
 
-from helpers import Logger
 
-
-logger = Logger()
-
-
-async def build_msg(client, data_from_twitter: Dict, current_user: str) -> discord.Embed:
+async def build_msg(data_from_twitter: Dict, current_user: str) -> discord.Embed:
     username = data_from_twitter["username"]
     name = data_from_twitter["name"]
     description = data_from_twitter["description"]
@@ -35,7 +30,6 @@ async def build_msg(client, data_from_twitter: Dict, current_user: str) -> disco
     if urls != "":
         embed.add_field(name="Liens", value=urls)
 
-    logger.info("Msg builded !")
     return embed
 
 
@@ -45,4 +39,3 @@ async def send_msg(client: discord.Client, discord_channel_id: int, embed: disco
         await discord_channel.send(embed=embed)
     if filename is not None:
         await discord_channel.send(file=discord.File(filename))
-    logger.info("Msg sended !")
