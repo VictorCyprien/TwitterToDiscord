@@ -39,8 +39,10 @@ async def build_msg(client, data_from_twitter: Dict, current_user: str) -> disco
     return embed
 
 
-async def send_msg(client: discord.Client, embed: discord.Embed, filename: str, discord_channel_id: int):
+async def send_msg(client: discord.Client, discord_channel_id: int, embed: discord.Embed = None, filename: str = None):
     discord_channel = client.get_channel(discord_channel_id)
-    await discord_channel.send(embed=embed)
-    await discord_channel.send(file=discord.File(filename))
+    if embed is not None:
+        await discord_channel.send(embed=embed)
+    if filename is not None:
+        await discord_channel.send(file=discord.File(filename))
     logger.info("Msg sended !")
