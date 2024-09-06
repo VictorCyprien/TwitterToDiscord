@@ -29,10 +29,10 @@ client = commands.Bot(
 
 
 async def run(playwright: Playwright, user_id: int):
-    browser = await create_driver(playwright)
-    page = await browser.new_page()
     cookies: List = open_json("cookies.json")
     if not cookies:
+        browser = await create_driver(playwright)
+        page = await browser.new_page()
         await connect(page)
     return await get_last_followings_from_user(user_id)
 
