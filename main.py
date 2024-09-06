@@ -67,7 +67,7 @@ async def add_twitter_profile(interaction: discord.Interaction, profil_name: str
     data[str(user_id)] = {}
     data[str(user_id)]["username"] = profil_name
     data[str(user_id)]["latest_following"] = ""
-    data[str(user_id)]["notifying_discord_channel"] = discord_channel.id if discord_channel is not None else 697858472548761692
+    data[str(user_id)]["notifying_discord_channel"] = discord_channel.id if discord_channel is not None else 1281596959236554875
 
     save_json("accounts_data.json", data)
     await interaction.response.send_message(f"Le profil de {profil_name} a été ajouté !")
