@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import List, Dict
 import discord
 from discord.ext import commands, tasks
 
@@ -31,7 +31,7 @@ client = commands.Bot(
 async def run(playwright: Playwright, user_id: int):
     browser = await create_driver(playwright)
     page = await browser.new_page()
-    cookies = open_json("cookies.json")
+    cookies: List = open_json("cookies.json")
     if not cookies:
         await connect(page)
     return await get_last_followings_from_user(user_id)

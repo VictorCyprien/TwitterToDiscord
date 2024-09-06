@@ -7,7 +7,7 @@ from json_helpers import extract_users_data, filter_empty_data
 
 logger = Logger()
 
-
+# TODO : The beginning of each function can be refactor to only one
 async def get_last_followers_from_user(user_id: int) -> List[Dict]:
     cookies = open_json("cookies.json")
     cookies_dict = {}
@@ -15,9 +15,10 @@ async def get_last_followers_from_user(user_id: int) -> List[Dict]:
         cookies_dict[one_cookie["name"]] = one_cookie["value"]
 
     env = get_env_config()
+    token = env('TWITTER_BEARER_AUTH')
 
     headers = {
-        "Authorization": f"Bearer {env("TWITTER_BEARER_AUTH")}",
+        "Authorization": f"Bearer {token}",
         "x-csrf-token": cookies_dict["ct0"]
     }
 
@@ -25,9 +26,6 @@ async def get_last_followers_from_user(user_id: int) -> List[Dict]:
 
     res = requests.get(url=url, cookies=cookies_dict, headers=headers)
     data = res.json()
-
-    save_json("data.json", data)
-    logger.info("Data saved !")
 
     filtred_data = filter_empty_data(data)
     return extract_users_data(filtred_data)
@@ -40,9 +38,10 @@ async def get_last_followings_from_user(user_id: int) -> List[Dict]:
         cookies_dict[one_cookie["name"]] = one_cookie["value"]
 
     env = get_env_config()
+    token = env('TWITTER_BEARER_AUTH')
 
     headers = {
-        "Authorization": f"Bearer {env("TWITTER_BEARER_AUTH")}",
+        "Authorization": f"Bearer {token}",
         "x-csrf-token": cookies_dict["ct0"]
     }
 
@@ -55,16 +54,17 @@ async def get_last_followings_from_user(user_id: int) -> List[Dict]:
     return extract_users_data(filtred_data)
 
 
-async def get_user_id_with_username(username: str) -> int | None:
+async def get_user_id_with_username(username: str) -> int:
     cookies = open_json("cookies.json")
     cookies_dict = {}
     for one_cookie in cookies:
         cookies_dict[one_cookie["name"]] = one_cookie["value"]
 
     env = get_env_config()
+    token = env('TWITTER_BEARER_AUTH')
 
     headers = {
-        "Authorization": f"Bearer {env("TWITTER_BEARER_AUTH")}",
+        "Authorization": f"Bearer {token}",
         "x-csrf-token": cookies_dict["ct0"]
     }
 
