@@ -41,6 +41,7 @@ def extract_users_data(data: Dict) -> List[Dict]:
         profile_image = glom(one_user, f"{content_path}.legacy.profile_image_url_https", skip_exc=KeyError, default=None)
         created_at = glom(one_user, f"{content_path}.legacy.created_at", skip_exc=KeyError, default=None)
         followers_number = glom(one_user, f"{content_path}.legacy.followers_count", skip_exc=KeyError, default=None)
+        following_number = glom(one_user, f"{content_path}.legacy.friends_count", skip_exc=KeyError, default=None)
         tweets_count = glom(one_user, f"{content_path}.legacy.statuses_count", skip_exc=KeyError, default=None)
         
         list_urls = glom(one_user, f"{content_path}.legacy.entities", skip_exc=KeyError, default=None)
@@ -53,6 +54,7 @@ def extract_users_data(data: Dict) -> List[Dict]:
             "profile_image": profile_image,
             "created_at": datetime.strptime(created_at, '%a %b %d %H:%M:%S %z %Y').strftime('%d/%m/%Y') if created_at is not None else None,
             "followers_number": followers_number,
+            "following_number": following_number,
             "tweets_count": tweets_count
         }
 
