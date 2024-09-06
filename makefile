@@ -7,4 +7,3 @@ run:
 
 clean:
 	rm -R venv
-	find -iname "*.pyc" -delete
