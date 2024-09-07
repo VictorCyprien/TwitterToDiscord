@@ -184,4 +184,12 @@ async def check_new_following():
 
 
 env = get_env_config()
-client.run(env("DISCORD_BOT_TOKEN"))
+current_environement = env("ENVIRONEMENT")
+if current_environement == "PROD":
+    token = env("DISCORD_BOT_TOKEN")
+elif current_environement == "DEV":
+    token = env("DISCORD_BOT_TOKEN_DEV")
+else:
+    logger.error("Please set an environement in .env file")
+    exit(0)
+client.run(token)
