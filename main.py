@@ -150,7 +150,7 @@ async def get_followings(interaction: discord.Interaction, profil_name: str):
     await clean_file(filename)
 
 
-@tasks.loop(seconds=30)
+@tasks.loop(minutes=5)
 async def check_new_following():
     await set_activity_type(client, Activity.WATCHING, "les derniers following de la liste")
     current_user_data = open_json("accounts_data.json")
