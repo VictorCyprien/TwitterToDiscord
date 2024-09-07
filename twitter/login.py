@@ -21,8 +21,11 @@ async def connect(page: Page) -> List[Cookie]:
     logger.info("Done !")
     await asyncio.sleep(2)
     logger.info("Entering username...")
-    await page.is_visible("input[type=text]")
-    await page.fill("input[type=text]", env("TWITTER_LOGIN_USERNAME"))
+    try:
+        await page.is_visible("input[type=text]")
+        await page.fill("input[type=text]", env("TWITTER_LOGIN_USERNAME"), timeout="10000")
+    except Exception as error:
+        logger.warning(error)
     await asyncio.sleep(2)
     await page.locator('span:text("Suivant"), span:text("Next")').click()
     logger.info("Done !")
