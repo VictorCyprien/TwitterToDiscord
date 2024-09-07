@@ -17,3 +17,6 @@ build_container:
 remove_container:
 	docker stop TwitterToDiscord && docker remove TwitterToDiscord
 
+logs:
+	docker logs TwitterToDiscord -f
+
