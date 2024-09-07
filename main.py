@@ -123,7 +123,11 @@ async def get_followers(interaction: discord.Interaction, profil_name: str):
     
     filename = f"{profil_name} - Followers.xlsx"
     logger.info(f"Getting data for user {profil_name} and creating followers list...")
-    await create_excel_file(await get_last_followers_from_user(user_id), filename)
+    last_followers = await get_last_followers_from_user(user_id)
+    if not last_followers:
+        logger.error("Unable to get the latest data, please refresh cookies")
+        await interaction.response.send_message("Impossible d'avoir les dernières données")
+    await create_excel_file(last_followers, filename)
 
     logger.info("Excel file created !\nSending to Discord...")
     await interaction.response.send_message(file=discord.File(filename))
@@ -141,7 +145,11 @@ async def get_followings(interaction: discord.Interaction, profil_name: str):
     
     filename = f"{profil_name} - Followings.xlsx"
     logger.info(f"Getting data for user {profil_name} and creating follwings list...")
-    await create_excel_file(await get_last_followings_from_user(user_id), filename)
+    last_followings = await get_last_followings_from_user(user_id)
+    if not last_followings:
+        logger.error("Unable to get the latest data, please refresh cookies")
+        await interaction.response.send_message("Impossible d'avoir les dernières données")
+    await create_excel_file(last_followings, filename)
 
     logger.info("Excel file created !\nSending to Discord...")
     await interaction.response.send_message(file=discord.File(filename))
@@ -162,6 +170,10 @@ async def check_new_following():
 
         async with async_playwright() as playwright:
             data_from_twitter = await run(playwright, user_id)
+
+        if not data_from_twitter:
+            logger.error("Unable to get the latest data, please refresh cookies")
+            return
 
         try:
             last_following = data_from_twitter[0]["username"]
