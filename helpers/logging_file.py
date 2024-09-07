@@ -23,6 +23,9 @@ class Logger:
             self.logger.addHandler(handler)
 
     class ColorFormatter(logging.Formatter):
+        def __init__(self):
+            super().__init__('%(asctime)s - %(message)s', datefmt='%d/%m/%Y %H:%M:%S')
+        
         def format(self, record):
             log_color = Logger.LOG_COLORS.get(record.levelno, Fore.WHITE)
             record.msg = log_color + record.msg + Style.RESET_ALL
