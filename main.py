@@ -187,8 +187,10 @@ env = get_env_config()
 current_environement = env("ENVIRONEMENT")
 if current_environement == "PROD":
     token = env("DISCORD_BOT_TOKEN")
+    logger.info("Running on prod")
 elif current_environement == "DEV":
     token = env("DISCORD_BOT_TOKEN_DEV")
+    logger.info("Running on dev")
 else:
     logger.error("Please set an environement in .env file")
     exit(0)
