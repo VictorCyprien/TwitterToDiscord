@@ -16,10 +16,15 @@ async def make_request(url: str) -> Dict:
 
     env = get_env_config()
     token = env('TWITTER_BEARER_AUTH')
+    x_csrf_token = cookies_dict.get("ct0", None)
+
+    if x_csrf_token is None:
+        logger.error("Something wrong with Twitter login, please delete cookies file, log into browser and check what happen")
+        exit(0)
 
     headers = {
         "Authorization": f"Bearer {token}",
-        "x-csrf-token": cookies_dict["ct0"]
+        "x-csrf-token": x_csrf_token
     }
 
     res = requests.get(url=url, cookies=cookies_dict, headers=headers)
