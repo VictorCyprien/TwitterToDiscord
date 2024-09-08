@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  test:
+  twitter-to-discord:
     image: twitter-to-discord:latest
     networks:
       - twitter-to-discord-network
