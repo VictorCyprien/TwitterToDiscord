@@ -2,7 +2,7 @@ from typing import List
 import asyncio
 from playwright.async_api import Page, Cookie, TimeoutError
 
-from helpers import save_json, get_env_config, Logger
+from helpers import get_env_config, Logger
 
 logger = Logger()
 
@@ -45,7 +45,4 @@ async def connect(page: Page) -> List[Cookie]:
     logger.info("Connected !")
 
     cookies = await page.context.cookies()
-    save_json("cookies.json", cookies)
-    logger.info("Cookies saved for next login !")
-
     return cookies
