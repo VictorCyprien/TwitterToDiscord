@@ -1,7 +1,7 @@
 from typing import List, Dict
 import discord
 from discord.ext import commands, tasks
-
+from pymongo.errors import ServerSelectionTimeoutError
 from table2ascii import table2ascii as t2a
 
 from playwright.async_api import async_playwright, Playwright
@@ -28,13 +28,13 @@ client = commands.Bot(
 )
 
 
-async def run(playwright: Playwright, user_id: int):
-    cookies: List = open_json("cookies.json")
+async def get_data_from_twitter(user_id: int):
+    mongo_client.set_collection("cookies")
+    cookies = mongo_client.get_all_data_from_collection()
     if not cookies:
-        browser = await create_driver(playwright)
-        page = await browser.new_page()
-        await connect(page)
-    return await get_last_followings_from_user(user_id)
+        logger.error("No cookies found, please push new cookies data to the database")
+        return []
+    return await get_last_followings_from_user(user_id, cookies)
 
 
 @client.event
@@ -42,8 +42,8 @@ async def on_ready():
     await client.wait_until_ready()
     logger.info("Twitter2DiscordBot en ligne !")
     try:
-        synced = await client.tree.sync()
-        logger.info(f"Synced : {len(synced)} command(s) !")
+        # synced = await client.tree.sync()
+        # logger.info(f"Synced : {len(synced)} command(s) !")
         check_new_following.start()
     except Exception as e:
         logger.info(e)
@@ -168,9 +168,7 @@ async def check_new_following():
         latest_following = user_data["latest_following"]
         discord_channel_id = user_data["notifying_discord_channel"]
 
-        async with async_playwright() as playwright:
-            data_from_twitter = await run(playwright, user_id)
-
+        data_from_twitter = await get_data_from_twitter(user_id)
         if not data_from_twitter:
             logger.error("Unable to get the latest data, please refresh cookies")
             return
@@ -208,6 +206,15 @@ else:
     exit(0)
 
 mongo_url = env("MONGODB_URL")
-mongo_client = MongoDBManager(mongo_url, "data")
+try:
+    mongo_client = MongoDBManager(mongo_url, "data")
+    mongo_client.ping()
+except ServerSelectionTimeoutError:
+    logger.error("Unable to connect to MongoDB, please check the url")
+    exit(1)
+
 logger.info("Connected to MongoDB !")
 client.run(token)
+
+# TODO : Get all user with Mongo + Link Mongo to add/remove user
+# TODO : Get cookies before followers/following requests
