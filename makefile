@@ -17,11 +17,15 @@ build_container:
 remove_container:
 	docker stop TwitterToDiscord && docker remove TwitterToDiscord
 
-run_on_docker:
-	make remove_container
-	make build_image
-	make build_container
-
 logs:
 	docker logs TwitterToDiscord -f
 
+build_db:
+	docker image pull mongo
+	docker volume create TwitterToDiscordData
+	docker run -it -d -v TwitterToDiscordData:/data/db -p 127.0.0.1:27017:27017 --name TwitterToDiscordMongoDB mongo
+
+clean_db:
+	docker stop TwitterToDiscordMongoDB
+	docker remove TwitterToDiscordMongoDB
+	docker volume rm TwitterToDiscordData
