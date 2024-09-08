@@ -7,7 +7,7 @@ from table2ascii import table2ascii as t2a
 from playwright.async_api import async_playwright, Playwright
 
 from twitter import connect, create_driver, get_last_followers_from_user, get_last_followings_from_user, get_user_id_with_username
-from helpers import open_json, save_json, get_env_config, create_excel_file, clean_file, Logger
+from helpers import open_json, save_json, get_env_config, create_excel_file, clean_file, Logger, MongoDBManager
 from discord_helpers import build_msg, send_msg, set_activity_type
 
 logger = Logger()
@@ -206,4 +206,8 @@ elif current_environement == "DEV":
 else:
     logger.error("Please set an environement in .env file")
     exit(0)
+
+mongo_url = env("MONGODB_URL")
+mongo_client = MongoDBManager(mongo_url, "data")
+logger.info("Connected to MongoDB !")
 client.run(token)
