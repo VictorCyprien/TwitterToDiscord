@@ -18,20 +18,26 @@ class MongoDBManager():
     def set_collection(self, collection_name: str) -> Collection:
         self.collection = self.database[collection_name]
     
-    def get_all_data_from_collection(self) -> List[Dict]:
+    def get_all_data_from_collection(self, collection_name: str) -> List[Dict]:
+        self.set_collection(collection_name)
         return list(self.collection.find())
 
-    def get_one_data_from_collection(self, filter: Dict):
+    def get_one_data_from_collection(self, collection_name: str, filter: Dict):
+        self.set_collection(collection_name)
         return self.collection.find(filter)
     
-    def add_data_to_collection(self, data: Dict):
+    def add_data_to_collection(self, collection_name: str, data: Dict):
+        self.set_collection(collection_name)
         self.collection.insert_one(data)
 
-    def update_one_data_from_collection(self, filter: Dict, update_values: Dict):
-        self.collection.find_one_and_update(filter, update_values)
+    def update_one_data_from_collection(self, collection_name: str, filter: Dict, update_values: Dict):
+        self.set_collection(collection_name)
+        self.collection.update_one(filter=filter, update=update_values)
 
-    def remove_one_data_from_collection(self, filter: Dict):
-        self.collection.find_one_and_delete(filter)
+    def remove_one_data_from_collection(self, collection_name: str, filter: Dict):
+        self.set_collection(collection_name)
+        self.collection.delete_one(filter)
 
-    def drop_data_from_collection(self):
+    def drop_data_from_collection(self, collection_name: str):
+        self.set_collection(collection_name)
         self.collection.delete_many({})
