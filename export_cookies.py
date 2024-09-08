@@ -1,15 +1,10 @@
-from typing import List, Dict
-import discord
 import asyncio
-from discord.ext import commands, tasks
 from pymongo.errors import ServerSelectionTimeoutError
-from table2ascii import table2ascii as t2a
 
-from playwright.async_api import async_playwright, Playwright
+from playwright.async_api import async_playwright
 
-from twitter import connect, create_driver, get_last_followers_from_user, get_last_followings_from_user, get_user_id_with_username
-from helpers import open_json, save_json, get_env_config, create_excel_file, clean_file, Logger, MongoDBManager
-from discord_helpers import build_msg, send_msg, set_activity_type
+from twitter import connect, create_driver
+from helpers import get_env_config, Logger, MongoDBManager
 
 
 logger = Logger()
@@ -21,13 +16,12 @@ async def get_cookies():
         page = await browser.new_page()
         cookies = await connect(page)
     
-    mongo_client.set_collection("cookies")
-    mongo_client.drop_data_from_collection()
+    mongo_client.drop_data_from_collection("cookies")
     for index, one_cookie in enumerate(cookies):
         one_cookie["_id"] = index
         keys_to_keep = ["_id", "name", "value"]
         cookies_filtred = {key: one_cookie[key] for key in keys_to_keep if key in one_cookie}
-        mongo_client.add_data_to_collection(cookies_filtred)
+        mongo_client.add_data_to_collection("cookies", cookies_filtred)
     
     logger.info("New cookies saved to database !")
     
