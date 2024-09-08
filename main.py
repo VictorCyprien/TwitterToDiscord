@@ -3,6 +3,7 @@ from discord.ext import commands, tasks
 from pymongo.errors import ServerSelectionTimeoutError
 from table2ascii import table2ascii as t2a
 from datetime import datetime
+import pytz
 
 from twitter import get_last_followers_from_user, get_last_followings_from_user, get_user_id_with_username
 from helpers import convert_list_dict_to_dicts, get_env_config, create_excel_file, clean_file, Logger, MongoDBManager, ErrorHandler
@@ -218,7 +219,7 @@ async def check_new_following():
             {
                 "$set": {
                     "latest_following": last_following, 
-                    "last_check": datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+                    "last_check": pytz.timezone('Europe/Paris').localize(datetime.now()).strftime("%d/%m/%Y %H:%M:%S")
                 }
             }
         )
