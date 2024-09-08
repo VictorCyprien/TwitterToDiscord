@@ -1,13 +1,11 @@
-from typing import List, Dict
 import discord
 from discord.ext import commands, tasks
 from pymongo.errors import ServerSelectionTimeoutError
 from table2ascii import table2ascii as t2a
+from datetime import datetime
 
-from playwright.async_api import async_playwright, Playwright
-
-from twitter import connect, create_driver, get_last_followers_from_user, get_last_followings_from_user, get_user_id_with_username
-from helpers import open_json, save_json, get_env_config, create_excel_file, clean_file, Logger, MongoDBManager
+from twitter import get_last_followers_from_user, get_last_followings_from_user, get_user_id_with_username
+from helpers import convert_list_dict_to_dicts, get_env_config, create_excel_file, clean_file, Logger, MongoDBManager, ErrorHandler
 from discord_helpers import build_msg, send_msg, set_activity_type
 
 logger = Logger()
@@ -29,10 +27,9 @@ client = commands.Bot(
 
 
 async def get_data_from_twitter(user_id: int):
-    mongo_client.set_collection("cookies")
-    cookies = mongo_client.get_all_data_from_collection()
+    cookies = mongo_client.get_all_data_from_collection("cookies")
     if not cookies:
-        logger.error("No cookies found, please push new cookies data to the database")
+        logger.error(ErrorHandler.NO_COOKIES_IN_DATABASE)
         return []
     return await get_last_followings_from_user(user_id, cookies)
 
@@ -42,8 +39,8 @@ async def on_ready():
     await client.wait_until_ready()
     logger.info("Twitter2DiscordBot en ligne !")
     try:
-        # synced = await client.tree.sync()
-        # logger.info(f"Synced : {len(synced)} command(s) !")
+        synced = await client.tree.sync()
+        logger.info(f"Synced : {len(synced)} command(s) !")
         check_new_following.start()
     except Exception as e:
         logger.info(e)
@@ -60,26 +57,35 @@ async def talk(interaction: discord.Interaction):
 async def add_twitter_profile(interaction: discord.Interaction, profil_name: str, discord_channel: discord.TextChannel):
     """ Add a twitter profile to the list
     """
-    data: Dict = open_json("accounts_data.json")
+    users_data = mongo_client.get_all_data_from_collection("users")
+    current_user_data = convert_list_dict_to_dicts(users_data)
 
-    for user_id in data.keys():
-        if data[user_id]["username"] == profil_name:
+    for user_id in current_user_data.keys():
+        if current_user_data[user_id]["username"] == profil_name:
             await interaction.response.send_message(f"La profil de {profil_name} est déjà dans mon répertoire !")
             return
 
 
-    user_id = await get_user_id_with_username(profil_name)
+    cookies = mongo_client.get_all_data_from_collection("cookies")
+    if not cookies:
+        logger.error(ErrorHandler.COOKIES_EXPIRED)
+        await interaction.response.send_message(ErrorHandler.DISCORD_MSG_ERROR)
+        return
+    user_id = await get_user_id_with_username(profil_name, cookies)
     if user_id is None:
         await interaction.response.send_message(f"Le profil {profil_name} n'a pas été trouvé sur Twitter.")
         return
+    
+    new_user_data = {
+        "_id": user_id,
+        "username": profil_name,
+        "latest_following": "",
+        "notifying_discord_channel": discord_channel.id,
+        "last_check": None
+    }
 
+    mongo_client.add_data_to_collection("users", new_user_data)
 
-    data[str(user_id)] = {}
-    data[str(user_id)]["username"] = profil_name
-    data[str(user_id)]["latest_following"] = ""
-    data[str(user_id)]["notifying_discord_channel"] = discord_channel.id
-
-    save_json("accounts_data.json", data)
     await interaction.response.send_message(f"Le profil de {profil_name} a été ajouté !")
 
 
@@ -87,12 +93,13 @@ async def add_twitter_profile(interaction: discord.Interaction, profil_name: str
 async def remove_twitter_profile(interaction: discord.Interaction, profil_name: str):
     """ Remove a twitter profile to the list
     """
-    data: dict = open_json("accounts_data.json")
+    users_data = mongo_client.get_all_data_from_collection("users")
+    current_user_data = convert_list_dict_to_dicts(users_data)
 
-    for user_id in data.keys():
-        if data[user_id]["username"] == profil_name:
-            del data[user_id]
-            save_json("accounts_data.json", data)
+    for user_id in current_user_data.keys():
+        if current_user_data[user_id]["username"] == profil_name:
+            del current_user_data[user_id]
+            mongo_client.remove_one_data_from_collection("users", {"username": profil_name})
             await interaction.response.send_message(f"Le profil de {profil_name} a été retiré !")
             return
         
@@ -103,12 +110,14 @@ async def remove_twitter_profile(interaction: discord.Interaction, profil_name: 
 async def get_list(interaction: discord.Interaction):
     """ Get list of user
     """
-    data: Dict = open_json("accounts_data.json")
+    users_data = mongo_client.get_all_data_from_collection("users")
+    current_user_data = convert_list_dict_to_dicts(users_data)
 
     table_string = t2a(
-        header=["Nom", "Salon associé"],
-        body=[[one_user['username'], client.get_channel(one_user["notifying_discord_channel"]).name] for one_user in data.values()],
-        first_col_heading=True
+        header=["Nom", "Salon associé", "Date du dernier following"],
+        body=[[one_user['username'], client.get_channel(one_user["notifying_discord_channel"]).name, one_user["last_check"]] for one_user in current_user_data.values()],
+        first_col_heading=True,
+        last_col_heading=True
     )
 
     await interaction.response.send_message(f"```\n{table_string}\n```")
@@ -116,17 +125,25 @@ async def get_list(interaction: discord.Interaction):
 
 @client.tree.command(name="get_followers")
 async def get_followers(interaction: discord.Interaction, profil_name: str):
-    user_id = await get_user_id_with_username(profil_name)
+    """ Get last followers of a user and send a Excel file
+    """
+    cookies = mongo_client.get_all_data_from_collection("cookies")
+    if not cookies:
+        logger.error(ErrorHandler.NO_COOKIES_IN_DATABASE)
+        await interaction.response.send_message(ErrorHandler.DISCORD_MSG_ERROR)
+        return
+    
+    user_id = await get_user_id_with_username(profil_name, cookies)
     if user_id is None:
         await interaction.response.send_message(f"Le profil {profil_name} n'a pas été trouvé sur Twitter.")
         return
     
     filename = f"{profil_name} - Followers.xlsx"
     logger.info(f"Getting data for user {profil_name} and creating followers list...")
-    last_followers = await get_last_followers_from_user(user_id)
+    last_followers = await get_last_followers_from_user(user_id, cookies)
     if not last_followers:
-        logger.error("Unable to get the latest data, please refresh cookies")
-        await interaction.response.send_message("Impossible d'avoir les dernières données")
+        logger.error(ErrorHandler.COOKIES_EXPIRED)
+        await interaction.response.send_message(ErrorHandler.DISCORD_MSG_ERROR)
     await create_excel_file(last_followers, filename)
 
     logger.info("Excel file created !\nSending to Discord...")
@@ -138,17 +155,25 @@ async def get_followers(interaction: discord.Interaction, profil_name: str):
 
 @client.tree.command(name="get_followings")
 async def get_followings(interaction: discord.Interaction, profil_name: str):
-    user_id = await get_user_id_with_username(profil_name)
+    """ Get last followings of a user and send a Excel file
+    """
+    cookies = mongo_client.get_all_data_from_collection("cookies")
+    if not cookies:
+        logger.error(ErrorHandler.NO_COOKIES_IN_DATABASE)
+        await interaction.response.send_message(ErrorHandler.DISCORD_MSG_ERROR)
+        return
+    
+    user_id = await get_user_id_with_username(profil_name, cookies)
     if user_id is None:
         await interaction.response.send_message(f"Le profil {profil_name} n'a pas été trouvé sur Twitter.")
         return
     
     filename = f"{profil_name} - Followings.xlsx"
     logger.info(f"Getting data for user {profil_name} and creating follwings list...")
-    last_followings = await get_last_followings_from_user(user_id)
+    last_followings = await get_last_followings_from_user(user_id, cookies)
     if not last_followings:
-        logger.error("Unable to get the latest data, please refresh cookies")
-        await interaction.response.send_message("Impossible d'avoir les dernières données")
+        logger.error(ErrorHandler.COOKIES_EXPIRED)
+        await interaction.response.send_message(ErrorHandler.DISCORD_MSG_ERROR)
     await create_excel_file(last_followings, filename)
 
     logger.info("Excel file created !\nSending to Discord...")
@@ -161,16 +186,17 @@ async def get_followings(interaction: discord.Interaction, profil_name: str):
 @tasks.loop(minutes=5)
 async def check_new_following():
     await set_activity_type(client, Activity.WATCHING, "les derniers following de la liste")
-    current_user_data = open_json("accounts_data.json")
+    users_data = mongo_client.get_all_data_from_collection("users")
+    current_user_data = convert_list_dict_to_dicts(users_data)
 
     for user_id, user_data in current_user_data.items():
         username = user_data["username"]
         latest_following = user_data["latest_following"]
         discord_channel_id = user_data["notifying_discord_channel"]
 
-        data_from_twitter = await get_data_from_twitter(user_id)
+        data_from_twitter = await get_data_from_twitter(int(user_id))
         if not data_from_twitter:
-            logger.error("Unable to get the latest data, please refresh cookies")
+            logger.error(ErrorHandler.COOKIES_EXPIRED)
             return
 
         try:
@@ -184,8 +210,19 @@ async def check_new_following():
             continue
 
         logger.info(f"New follower for {username} !\nPosting to channel...")
-        user_data["latest_following"] = last_following
-        save_json("accounts_data.json", current_user_data)
+        mongo_client.update_one_data_from_collection(
+            "users",
+            {
+                "_id": int(user_id)
+            }, 
+            {
+                "$set": {
+                    "latest_following": last_following, 
+                    "last_check": datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+                }
+            }
+        )
+        logger.info("Saved to database !")
         embed = await build_msg(data_from_twitter[0], user_data["username"])
         await send_msg(client, discord_channel_id, embed)
         logger.info("Message sended !")
@@ -202,7 +239,7 @@ elif current_environement == "DEV":
     token = env("DISCORD_BOT_TOKEN_DEV")
     logger.info("Running on dev")
 else:
-    logger.error("Please set an environement in .env file")
+    logger.error(ErrorHandler.ENV_NOT_SET)
     exit(0)
 
 mongo_url = env("MONGODB_URL")
@@ -210,11 +247,8 @@ try:
     mongo_client = MongoDBManager(mongo_url, "data")
     mongo_client.ping()
 except ServerSelectionTimeoutError:
-    logger.error("Unable to connect to MongoDB, please check the url")
+    logger.error(ErrorHandler.DATABASE_ERROR_CONNECT)
     exit(1)
 
 logger.info("Connected to MongoDB !")
 client.run(token)
-
-# TODO : Get all user with Mongo + Link Mongo to add/remove user
-# TODO : Get cookies before followers/following requests
