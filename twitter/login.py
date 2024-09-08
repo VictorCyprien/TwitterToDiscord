@@ -2,7 +2,7 @@ from typing import List
 import asyncio
 from playwright.async_api import Page, Cookie, TimeoutError
 
-from helpers import save_json, get_env_config, Logger
+from helpers import get_env_config, Logger
 
 logger = Logger()
 
