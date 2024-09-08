@@ -9,10 +9,10 @@ clean:
 	rm -R venv
 
 build_image:
-	docker build -t twitter_to_discord  .
+	docker build -t twitter-to-discord  .
 
 build_container:
-	docker run -d -it --name TwitterToDiscord --env-file .env --cpus="1" --memory="2048m" twitter_to_discord
+	docker run -d -it --name TwitterToDiscord --env-file .env --cpus="1" --memory="2048m" twitter-to-discord
 
 remove_container:
 	docker stop TwitterToDiscord && docker remove TwitterToDiscord
