@@ -2,7 +2,7 @@ from typing import Dict, List
 import requests
 from glom import glom
 
-from helpers import open_json, get_env_config, save_json, Logger
+from helpers import get_env_config, Logger, ErrorHandler
 from json_helpers import extract_users_data, filter_empty_data
 
 logger = Logger()
@@ -23,7 +23,7 @@ async def make_request(url: str, cookies: List[Dict]) -> Dict:
     x_csrf_token = await get_x_csrf_token(cookies)
 
     if x_csrf_token is None:
-        logger.error("Something wrong with Twitter login, please delete cookies file, log into browser and check what happen")
+        logger.error(ErrorHandler.REQUESTS_ERROR)
         exit(0)
 
     headers = {
@@ -66,8 +66,8 @@ async def get_user_id_with_username(username: str, cookies: List[Dict]) -> int:
     url = f"https://x.com/i/api/graphql/NimuplG1OB7Fd2btCLdBOw/UserByScreenName?variables=%7B%22screen_name%22%3A%22{username}%22%2C%22withSafetyModeUserFields%22%3Atrue%7D&features=%7B%22hidden_profile_likes_enabled%22%3Atrue%2C%22hidden_profile_subscriptions_enabled%22%3Atrue%2C%22responsive_web_graphql_exclude_directive_enabled%22%3Atrue%2C%22verified_phone_label_enabled%22%3Afalse%2C%22subscriptions_verification_info_is_identity_verified_enabled%22%3Atrue%2C%22subscriptions_verification_info_verified_since_enabled%22%3Atrue%2C%22highlights_tweets_tab_ui_enabled%22%3Atrue%2C%22responsive_web_twitter_article_notes_tab_enabled%22%3Afalse%2C%22creator_subscriptions_tweet_preview_api_enabled%22%3Atrue%2C%22responsive_web_graphql_skip_user_profile_image_extensions_enabled%22%3Afalse%2C%22responsive_web_graphql_timeline_navigation_enabled%22%3Atrue%7D&field_toggles=%7B%22withAuxiliaryUserLabels%22%3Afalse%7D"
     data = await make_request(url, cookies)
     if not data:
-        logger.error("User not found because of cookies, please refresh them")
+        logger.error(ErrorHandler.USER_ERROR)
         return None
     
     user_id = glom(data, "data.user.result.rest_id", skip_exc=KeyError, default=None)
-    return user_id
+    return int(user_id)
