@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  TwitterToDiscord:
+    image: twitter_to_discord:latest
+    networks:
+      - TwitterToDiscordNetwork
+    container_name: TwitterToDiscord
+    env_file:
+      - .env
+
+  mongo:
+    image: mongo:latest
+    ports:
+      - "127.0.0.1:27017:27017"
+    container_name: TwitterToDiscordMongoDB
+    networks:
+      - TwitterToDiscordNetwork
+    volumes:
+      - TwitterToDiscordData:/data/db
+
+
+networks:
+  TwitterToDiscordNetwork:
+
+volumes:
+  TwitterToDiscordData:
+  TwitterToDiscordMongoData:
