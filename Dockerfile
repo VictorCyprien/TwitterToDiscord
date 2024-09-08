@@ -7,4 +7,4 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-CMD ["/bin/bash", "-c", "./startup.sh"]
+CMD ["python", "main.py"]
