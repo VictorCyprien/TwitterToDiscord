@@ -18,7 +18,7 @@ remove_container:
 	docker stop TwitterToDiscord && docker remove TwitterToDiscord
 
 logs:
-	docker logs TwitterToDiscord -f
+	docker logs TwitterToDiscord:latest -f
 
 build_db:
 	docker image pull mongo
