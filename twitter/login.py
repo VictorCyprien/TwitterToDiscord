@@ -45,7 +45,4 @@ async def connect(page: Page) -> List[Cookie]:
     logger.info("Connected !")
 
     cookies = await page.context.cookies()
-    save_json("cookies.json", cookies)
-    logger.info("Cookies saved for next login !")
-
     return cookies
