@@ -3,7 +3,7 @@ import discord
 
 
 async def build_msg(data_from_twitter: Dict, current_user: str) -> discord.Embed:
-    username = data_from_twitter["username"]
+    profile_url = data_from_twitter["url"]
     name = data_from_twitter["name"]
     description = data_from_twitter["description"]
     profile_image = data_from_twitter["profile_image"]
@@ -17,7 +17,7 @@ async def build_msg(data_from_twitter: Dict, current_user: str) -> discord.Embed
         title=f"{current_user} vient de s'abonner à {name}",
         color=discord.Color.green()
     )
-    embed.description = f"https://x.com/{username}"
+    embed.description = profile_url
 
     embed.set_thumbnail(url=profile_image)
     embed.add_field(name="Nom", value=name)
