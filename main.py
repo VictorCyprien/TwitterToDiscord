@@ -126,7 +126,7 @@ async def get_list(interaction: discord.Interaction):
 
 @client.tree.command(name="get_followers")
 async def get_followers(interaction: discord.Interaction, profil_name: str):
-    """ Get last followers of a user and send a Excel file
+    """ Get all followers of a user and send a Excel file
     """
     cookies = mongo_client.get_all_data_from_collection("cookies")
     if not cookies:
@@ -157,7 +157,7 @@ async def get_followers(interaction: discord.Interaction, profil_name: str):
 
 @client.tree.command(name="get_followings")
 async def get_followings(interaction: discord.Interaction, profil_name: str):
-    """ Get last followings of a user and send a Excel file
+    """ Get all followings of a user and send a Excel file
     """
     cookies = mongo_client.get_all_data_from_collection("cookies")
     if not cookies:
