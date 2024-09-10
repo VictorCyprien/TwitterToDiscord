@@ -3,8 +3,9 @@ from discord.ext import commands, tasks
 from pymongo.errors import ServerSelectionTimeoutError
 from table2ascii import table2ascii as t2a
 from datetime import datetime
+import pytz
 
-from twitter import get_last_followers_from_user, get_last_followings_from_user, get_user_id_with_username
+from twitter import get_last_followers_from_user, get_last_followings_from_user, get_user_id_with_username, get_all_followers_from_user, get_all_followings_from_user
 from helpers import convert_list_dict_to_dicts, get_env_config, create_excel_file, clean_file, Logger, MongoDBManager, ErrorHandler
 from discord_helpers import build_msg, send_msg, set_activity_type
 
@@ -125,7 +126,7 @@ async def get_list(interaction: discord.Interaction):
 
 @client.tree.command(name="get_followers")
 async def get_followers(interaction: discord.Interaction, profil_name: str):
-    """ Get last followers of a user and send a Excel file
+    """ Get all followers of a user and send a Excel file
     """
     cookies = mongo_client.get_all_data_from_collection("cookies")
     if not cookies:
@@ -138,16 +139,17 @@ async def get_followers(interaction: discord.Interaction, profil_name: str):
         await interaction.response.send_message(f"Le profil {profil_name} n'a pas été trouvé sur Twitter.")
         return
     
+    await interaction.response.defer(thinking=True)
     filename = f"{profil_name} - Followers.xlsx"
     logger.info(f"Getting data for user {profil_name} and creating followers list...")
-    last_followers = await get_last_followers_from_user(user_id, cookies)
+    last_followers = await get_all_followers_from_user(user_id, cookies)
     if not last_followers:
         logger.error(ErrorHandler.COOKIES_EXPIRED)
-        await interaction.response.send_message(ErrorHandler.DISCORD_MSG_ERROR)
+        await interaction.followup.send(ErrorHandler.DISCORD_MSG_ERROR)
     await create_excel_file(last_followers, filename)
 
     logger.info("Excel file created !\nSending to Discord...")
-    await interaction.response.send_message(file=discord.File(filename))
+    await interaction.followup.send(file=discord.File(filename))
 
     logger.info("Excel file sended !")
     await clean_file(filename)
@@ -155,7 +157,7 @@ async def get_followers(interaction: discord.Interaction, profil_name: str):
 
 @client.tree.command(name="get_followings")
 async def get_followings(interaction: discord.Interaction, profil_name: str):
-    """ Get last followings of a user and send a Excel file
+    """ Get all followings of a user and send a Excel file
     """
     cookies = mongo_client.get_all_data_from_collection("cookies")
     if not cookies:
@@ -168,16 +170,17 @@ async def get_followings(interaction: discord.Interaction, profil_name: str):
         await interaction.response.send_message(f"Le profil {profil_name} n'a pas été trouvé sur Twitter.")
         return
     
+    await interaction.response.defer(thinking=True)
     filename = f"{profil_name} - Followings.xlsx"
     logger.info(f"Getting data for user {profil_name} and creating follwings list...")
-    last_followings = await get_last_followings_from_user(user_id, cookies)
+    last_followings = await get_all_followings_from_user(user_id, cookies)
     if not last_followings:
         logger.error(ErrorHandler.COOKIES_EXPIRED)
-        await interaction.response.send_message(ErrorHandler.DISCORD_MSG_ERROR)
+        await interaction.followup.send(ErrorHandler.DISCORD_MSG_ERROR)
     await create_excel_file(last_followings, filename)
 
     logger.info("Excel file created !\nSending to Discord...")
-    await interaction.response.send_message(file=discord.File(filename))
+    await interaction.followup.send(file=discord.File(filename))
 
     logger.info("Excel file sended !")
     await clean_file(filename)
@@ -218,7 +221,7 @@ async def check_new_following():
             {
                 "$set": {
                     "latest_following": last_following, 
-                    "last_check": datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+                    "last_check": pytz.timezone('Europe/Paris').localize(datetime.now()).strftime("%d/%m/%Y %H:%M:%S")
                 }
             }
         )

@@ -9,16 +9,16 @@ clean:
 	rm -R venv
 
 build_image:
-	docker build -t twitter-to-discord  .
+	docker build -t twitter-to-discord:latest  .
 
 build_container:
 	docker run -d -it --name TwitterToDiscord --env-file .env --cpus="1" --memory="2048m" twitter-to-discord
 
 remove_container:
-	docker stop TwitterToDiscord && docker remove TwitterToDiscord
+	docker stop twitter-to-discord && docker remove twitter-to-discord
 
 logs:
-	docker logs TwitterToDiscord:latest -f
+	docker logs twitter-to-discord -f
 
 build_db:
 	docker image pull mongo

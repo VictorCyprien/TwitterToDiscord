@@ -1,3 +1,3 @@
 from .login import connect
 from .create_driver import create_driver
-from .get_last_following import get_last_followers_from_user, get_last_followings_from_user, get_user_id_with_username
+from .get_twitter_data import get_last_followers_from_user, get_last_followings_from_user, get_user_id_with_username, get_all_followers_from_user, get_all_followings_from_user
