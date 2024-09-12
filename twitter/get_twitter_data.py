@@ -85,6 +85,8 @@ async def get_user_id_with_username(username: str, cookies: List[Dict]) -> int:
         return None
     
     user_id = glom(data, "data.user.result.rest_id", skip_exc=KeyError, default=None)
+    if user_id is not None:
+        user_id = int(user_id)
     return user_id
 
 
