@@ -2,6 +2,7 @@ from typing import Dict, List
 import requests
 import json
 import asyncio
+import aiohttp
 
 from glom import glom
 
@@ -34,24 +35,22 @@ async def make_request(url: str, cookies: List[Dict], params: Dict = None) -> Di
         "x-csrf-token": x_csrf_token
     }
 
-    res = requests.get(
-        url=url, 
-        cookies={one_cookie["name"]: one_cookie["value"] for one_cookie in cookies}, 
-        headers=headers,
-        params=params
-    )
-
-    if res.status_code == 403:
-        return {}
-    if res.text == "Rate limit exceeded":
-        logger.error("Rate limit exceeded")
-        return {}
-    
-    data: Dict = res.json()
-    if data.get("errors", None) is not None:
-        logger.error("Could not authenticate you")
-        return {}
-    
+    async with aiohttp.ClientSession(
+        headers=headers, 
+        cookies={one_cookie["name"]: one_cookie["value"] for one_cookie in cookies}
+    ) as session:
+        async with session.get(url=url, params=params) as res:
+            if res.status == 403:
+                return {}
+            if res.text == "Rate limit exceeded":
+                logger.error("Rate limit exceeded")
+                return {}
+            
+            data: Dict = await res.json()
+            if data.get("errors", None) is not None:
+                logger.error("Could not authenticate you")
+                return {}
+            
     return data
 
 
@@ -85,6 +84,8 @@ async def get_user_id_with_username(username: str, cookies: List[Dict]) -> int:
         return None
     
     user_id = glom(data, "data.user.result.rest_id", skip_exc=KeyError, default=None)
+    if user_id is not None:
+        user_id = int(user_id)
     return user_id
 
 
