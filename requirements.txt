@@ -4,6 +4,7 @@ discord==2.3.2
 discord.py==2.4.0
 environs==11.0.0
 glom==23.5.0
+matplotlib==3.9.2
 numpy==2.0.2
 openpyxl==3.1.5
 pandas==2.2.2
