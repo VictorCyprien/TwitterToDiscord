@@ -11,7 +11,6 @@ async def create_excel_file(data: List[Dict], filename: str):
 def create_list_image(data: List[Dict]):
     dataframe = pd.DataFrame(data)
     dataframe.rename(columns={'username': 'Utilisateur', 'latest_following': 'Dernier abonnement', 'last_check': 'Date du dernier abonnement'}, inplace=True)
-    print(dataframe.columns)
     fig, ax = plt.subplots(figsize=(len(dataframe.columns) * 2, len(dataframe) * 0.4))
     ax.axis('tight')
     ax.axis('off')
