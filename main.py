@@ -181,7 +181,7 @@ async def get_followings(interaction: discord.Interaction, profil_name: str):
     await clean_file(filename)
 
 
-@tasks.loop(minutes=5)
+@tasks.loop(minutes=15)
 async def check_new_following():
     await set_activity_type(client, Activity.WATCHING, "les derniers following de la liste")
     users_data = mongo_client.get_all_data_from_collection("users")
