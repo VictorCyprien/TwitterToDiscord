@@ -197,10 +197,14 @@ async def check_new_following():
         latest_following = user_data["latest_following"]
         discord_channel_id = user_data["notifying_discord_channel"]
 
+        logger.info(f"Getting infos of {username}...")
         data_from_twitter = await get_data_from_twitter(int(user_id))
-        if not data_from_twitter:
+        if RequestStatus.status == "AUTH_PROBLEM":
             logger.error(ErrorHandler.COOKIES_EXPIRED)
             return
+        elif RequestStatus.status == "USER_PROBLEM":
+            logger.error("Unable to get user's data, maybe his account is private ?")
+            continue
 
         try:
             last_following = data_from_twitter[0]["username"]
@@ -212,7 +216,8 @@ async def check_new_following():
             logger.warning(f"Nothing new for {username}, searching for next person...")
             continue
 
-        logger.info(f"New follower for {username} !\nPosting to channel...")
+        logger.info(f"New follower for {username} !")
+        logger.info("Posting to channel...")
         mongo_client.update_one_data_from_collection(
             "users",
             {

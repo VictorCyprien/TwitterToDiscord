@@ -1,12 +1,11 @@
 from typing import Dict, List
-import requests
 import json
 import asyncio
 import aiohttp
 
 from glom import glom
 
-from helpers import get_env_config, Logger, ErrorHandler
+from helpers import get_env_config, Logger, ErrorHandler, RequestStatus
 from extract_helpers import extract_users_data, filter_empty_data, get_entities
 
 logger = Logger()
@@ -19,6 +18,7 @@ async def get_x_csrf_token(cookies: List[Dict]) -> str:
             x_csrf_token = one_cookie['value']
     
     return x_csrf_token
+
 
 async def make_request(url: str, cookies: List[Dict], params: Dict = None) -> Dict:
     env = get_env_config()
@@ -41,16 +41,25 @@ async def make_request(url: str, cookies: List[Dict], params: Dict = None) -> Di
     ) as session:
         async with session.get(url=url, params=params) as res:
             if res.status == 403:
+                RequestStatus.status = "AUTH_PROBLEM"
                 return {}
             if res.text == "Rate limit exceeded":
                 logger.error("Rate limit exceeded")
+                RequestStatus.status = "AUTH_PROBLEM"
                 return {}
             
             data: Dict = await res.json()
             if data.get("errors", None) is not None:
                 logger.error("Could not authenticate you")
+                RequestStatus.status = "AUTH_PROBLEM"
                 return {}
             
+            users = glom(data, "data.user", skip_exc=KeyError, default={})
+            if not users:
+                RequestStatus.status = "USER_PROBLEM"
+                return {}
+
+    RequestStatus.status = "OK"
     return data
 
 
