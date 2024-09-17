@@ -17,9 +17,9 @@ class MongoDBManager():
     def set_collection(self, collection_name: str) -> Collection:
         self.collection = self.database[collection_name]
     
-    def get_all_data_from_collection(self, collection_name: str) -> List[Dict]:
+    def get_all_data_from_collection(self, collection_name: str, filter: Dict = None) -> List[Dict]:
         self.set_collection(collection_name)
-        return list(self.collection.find())
+        return list(self.collection.find({}, filter))
 
     def get_one_data_from_collection(self, collection_name: str, filter: Dict):
         self.set_collection(collection_name)
