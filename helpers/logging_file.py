@@ -45,3 +45,7 @@ class Logger:
 
     def critical(self, message: str):
         self.logger.critical(message)
+
+
+class RequestStatus():
+    status = ""
