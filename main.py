@@ -6,7 +6,7 @@ from datetime import datetime
 import pytz
 
 from twitter import get_last_followers_from_user, get_last_followings_from_user, get_user_id_with_username, get_all_followers_from_user, get_all_followings_from_user
-from helpers import convert_list_dict_to_dicts, get_env_config, create_excel_file, clean_file, Logger, MongoDBManager, ErrorHandler
+from helpers import convert_list_dict_to_dicts, get_env_config, create_excel_file, create_list_image, clean_file, Logger, MongoDBManager, ErrorHandler, RequestStatus
 from discord_helpers import build_msg, send_msg, set_activity_type
 
 logger = Logger()
@@ -111,17 +111,12 @@ async def remove_twitter_profile(interaction: discord.Interaction, profil_name: 
 async def get_list(interaction: discord.Interaction):
     """ Get list of user
     """
-    users_data = mongo_client.get_all_data_from_collection("users")
-    current_user_data = convert_list_dict_to_dicts(users_data)
+    users_data = mongo_client.get_all_data_from_collection("users", {"_id": 0, "notifying_discord_channel": 0})
+    create_list_image(users_data)
 
-    table_string = t2a(
-        header=["Nom", "Salon associé", "Date du dernier following"],
-        body=[[one_user['username'], client.get_channel(one_user["notifying_discord_channel"]).name, one_user["last_check"]] for one_user in current_user_data.values()],
-        first_col_heading=True,
-        last_col_heading=True
-    )
-
-    await interaction.response.send_message(f"```\n{table_string}\n```")
+    filename = "list.png"
+    await interaction.response.send_message(file=discord.File(filename))
+    await clean_file(filename)
 
 
 @client.tree.command(name="get_followers")
@@ -197,10 +192,14 @@ async def check_new_following():
         latest_following = user_data["latest_following"]
         discord_channel_id = user_data["notifying_discord_channel"]
 
+        logger.info(f"Getting infos of {username}...")
         data_from_twitter = await get_data_from_twitter(int(user_id))
-        if not data_from_twitter:
+        if RequestStatus.status == "AUTH_PROBLEM":
             logger.error(ErrorHandler.COOKIES_EXPIRED)
             return
+        elif RequestStatus.status == "USER_PROBLEM":
+            logger.error("Unable to get user's data, maybe his account is private ?")
+            continue
 
         try:
             last_following = data_from_twitter[0]["username"]
@@ -212,7 +211,8 @@ async def check_new_following():
             logger.warning(f"Nothing new for {username}, searching for next person...")
             continue
 
-        logger.info(f"New follower for {username} !\nPosting to channel...")
+        logger.info(f"New follower for {username} !")
+        logger.info("Posting to channel...")
         mongo_client.update_one_data_from_collection(
             "users",
             {
