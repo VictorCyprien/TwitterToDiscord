@@ -207,6 +207,10 @@ async def check_new_following():
             logger.warning(f"The user {username} follow nobody right now, searching for next person...")
             continue
 
+        if last_following == None:
+            logger.warning(f"The last following of {username} cannot be seen...")
+            continue
+
         if last_following == latest_following:
             logger.warning(f"Nothing new for {username}, searching for next person...")
             continue
