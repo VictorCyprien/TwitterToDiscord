@@ -5,8 +5,8 @@ from table2ascii import table2ascii as t2a
 from datetime import datetime
 import pytz
 
-from twitter import get_last_followers_from_user, get_last_followings_from_user, get_user_id_with_username, get_all_followers_from_user, get_all_followings_from_user
-from helpers import convert_list_dict_to_dicts, get_env_config, create_excel_file, create_list_image, clean_file, Logger, MongoDBManager, ErrorHandler, RequestStatus
+from twitter import get_last_followings_from_user, get_user_id_with_username, get_all_followers_from_user, get_all_followings_from_user
+from helpers import convert_list_dict_to_dicts, get_env_config, create_excel_file, clean_file, Logger, MongoDBManager, ErrorHandler, RequestStatus
 from discord_helpers import build_msg, send_msg, set_activity_type
 
 logger = Logger()
@@ -112,9 +112,10 @@ async def get_list(interaction: discord.Interaction):
     """ Get list of user
     """
     users_data = mongo_client.get_all_data_from_collection("users", {"_id": 0, "notifying_discord_channel": 0})
-    create_list_image(users_data)
+    
+    filename = "Liste des utilisateurs suivi.xlsx"
+    await create_excel_file(users_data, filename)
 
-    filename = "list.png"
     await interaction.response.send_message(file=discord.File(filename))
     await clean_file(filename)
 
