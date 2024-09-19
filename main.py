@@ -6,7 +6,7 @@ from datetime import datetime
 import pytz
 
 from twitter import get_last_followings_from_user, get_user_id_with_username, get_all_followers_from_user, get_all_followings_from_user
-from helpers import convert_list_dict_to_dicts, get_env_config, create_excel_file, clean_file, Logger, MongoDBManager, ErrorHandler, RequestStatus
+from helpers import convert_list_dict_to_dicts, convert_list_list_dict_to_list_dict, get_env_config, create_excel_file, rename_column, clean_file, Logger, MongoDBManager, ErrorHandler, RequestStatus
 from discord_helpers import build_msg, send_msg, set_activity_type
 
 logger = Logger()
@@ -143,6 +143,8 @@ async def get_followers(interaction: discord.Interaction, profil_name: str):
     if not last_followers:
         logger.error(ErrorHandler.COOKIES_EXPIRED)
         await interaction.followup.send(ErrorHandler.DISCORD_MSG_ERROR)
+    
+    last_followers = convert_list_list_dict_to_list_dict(last_followers)
     await create_excel_file(last_followers, filename)
 
     logger.info("Excel file created !\nSending to Discord...")
@@ -174,6 +176,8 @@ async def get_followings(interaction: discord.Interaction, profil_name: str):
     if not last_followings:
         logger.error(ErrorHandler.COOKIES_EXPIRED)
         await interaction.followup.send(ErrorHandler.DISCORD_MSG_ERROR)
+
+    last_followings = convert_list_list_dict_to_list_dict(last_followings)
     await create_excel_file(last_followings, filename)
 
     logger.info("Excel file created !\nSending to Discord...")
