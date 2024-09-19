@@ -111,7 +111,7 @@ def get_cursor_from_data(data: Dict) -> str:
     return current_cursor
 
 
-async def get_all_followings_from_user(user_id: int, cookies: List[Dict]) -> List[Dict]:
+async def get_all_followings_from_user(user_id: int, cookies: List[Dict]) -> List[List[Dict]]:
     current_cursor = None
     cursor_in_data = True
     final_data = []
@@ -172,7 +172,7 @@ async def get_all_followings_from_user(user_id: int, cookies: List[Dict]) -> Lis
     return final_data
 
 
-async def get_all_followers_from_user(user_id: int, cookies: List[Dict]) -> List[Dict]:
+async def get_all_followers_from_user(user_id: int, cookies: List[Dict]) -> List[List[Dict]]:
     current_cursor = None
     cursor_in_data = True
     final_data = []
