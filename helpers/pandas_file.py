@@ -1,12 +1,17 @@
 from typing import List, Dict
 import pandas as pd
+from pandas import DataFrame
 import matplotlib.pyplot as plt
 
 
 async def create_excel_file(data: List[Dict], filename: str):
     dataframe = pd.DataFrame(data)
-    dataframe.rename(columns={'username': 'Utilisateur', 'latest_following': 'Dernier abonnement', 'last_check': 'Date du dernier abonnement'}, inplace=True)
     dataframe.to_excel(filename, index=False)
+
+
+async def rename_column(filename: str, columns: Dict):
+    dataframe = pd.read_excel(filename)
+    dataframe.rename(columns=columns, inplace=True)
 
 
 def create_list_image(data: List[Dict]):

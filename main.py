@@ -115,6 +115,7 @@ async def get_list(interaction: discord.Interaction):
     
     filename = "Liste des utilisateurs suivi.xlsx"
     await create_excel_file(users_data, filename)
+    await rename_column(filename, {'username': 'Utilisateur', 'latest_following': 'Dernier abonnement', 'last_check': 'Date du dernier abonnement'})
 
     await interaction.response.send_message(file=discord.File(filename))
     await clean_file(filename)
