@@ -3,7 +3,7 @@ import discord
 
 
 async def build_msg(data_from_twitter: Dict, current_user: str) -> discord.Embed:
-    profile_url = data_from_twitter["url"]
+    profile_url = data_from_twitter["profile_url"]
     name = data_from_twitter["name"]
     description = data_from_twitter["description"]
     profile_image = data_from_twitter["profile_image"]

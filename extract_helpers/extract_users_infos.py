@@ -52,7 +52,7 @@ def extract_users_data(data: Dict) -> List[Dict]:
         urls = extract_urls(list_urls)
 
         current_user = {
-            "url": f"https://x.com/{username}",
+            "profile_url": f"https://x.com/{username}",
             "username": username,
             "name": name,
             "description": description,
