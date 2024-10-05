@@ -171,7 +171,10 @@ async def get_all_followings_from_user(user_id: int, cookies: List[Dict]) -> Lis
     
     return final_data
 
-
+# TODO : This need to have 3 try
+# At 3 try, we return either nothing or what we have for now (even if not complet)
+# At 10 requests => Wait for 10 minutes
+# 1 requests => 50 users + 10 seconds of waiting
 async def get_all_followers_from_user(user_id: int, cookies: List[Dict]) -> List[List[Dict]]:
     current_cursor = None
     cursor_in_data = True
