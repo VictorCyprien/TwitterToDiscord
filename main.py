@@ -4,9 +4,24 @@ from pymongo.errors import ServerSelectionTimeoutError
 from table2ascii import table2ascii as t2a
 from datetime import datetime
 import pytz
+import async_executor
 
 from twitter import get_last_followings_from_user, get_user_id_with_username, get_all_followers_from_user, get_all_followings_from_user
-from helpers import convert_list_dict_to_dicts, convert_list_list_dict_to_list_dict, get_env_config, create_excel_file, rename_column, clean_file, Logger, MongoDBManager, ErrorHandler, RequestStatus
+from helpers import (
+    convert_list_dict_to_dicts,
+    get_env_config, 
+    create_excel_file, 
+    rename_column, 
+    clean_file,
+    get_followers_from_user_future,
+    get_followings_from_user_future,
+    future_result,
+    Logger, 
+    MongoDBManager, 
+    ErrorHandler, 
+    RequestStatus
+)
+
 from discord_helpers import build_msg, send_msg, set_activity_type
 
 logger = Logger()
@@ -136,22 +151,17 @@ async def get_followers(interaction: discord.Interaction, profil_name: str):
         await interaction.response.send_message(f"Le profil {profil_name} n'a pas été trouvé sur Twitter.")
         return
     
-    await interaction.response.defer(thinking=True)
+    user_who_invoked = interaction.user.id
+    channel_id_invoked = interaction.channel_id
+
     filename = f"{profil_name} - Followers.xlsx"
     logger.info(f"Getting data for user {profil_name} and creating followers list...")
-    last_followers = await get_all_followers_from_user(user_id, cookies)
-    if not last_followers:
-        logger.error(ErrorHandler.COOKIES_EXPIRED)
-        await interaction.followup.send(ErrorHandler.DISCORD_MSG_ERROR)
-    
-    last_followers = convert_list_list_dict_to_list_dict(last_followers)
-    await create_excel_file(last_followers, filename)
+    await interaction.response.send_message(f"Je vais m'occuper de récuperer les followers de {profil_name} !\nJ'enverrais une notification quand l'opération sera terminée")
 
-    logger.info("Excel file created !\nSending to Discord...")
-    await interaction.followup.send(file=discord.File(filename))
-
-    logger.info("Excel file sended !")
-    await clean_file(filename)
+    executor = async_executor.AsyncExecutor(max_concurrent=1)
+    executor.submit(get_followers_from_user_future, user_id, cookies, filename)
+    async for task in executor:
+        await future_result(task, client, user_who_invoked, channel_id_invoked, filename)
 
 
 @client.tree.command(name="get_followings")
@@ -169,22 +179,18 @@ async def get_followings(interaction: discord.Interaction, profil_name: str):
         await interaction.response.send_message(f"Le profil {profil_name} n'a pas été trouvé sur Twitter.")
         return
     
-    await interaction.response.defer(thinking=True)
+    user_who_invoked = interaction.user.id
+    channel_id_invoked = interaction.channel_id
+
     filename = f"{profil_name} - Followings.xlsx"
     logger.info(f"Getting data for user {profil_name} and creating follwings list...")
-    last_followings = await get_all_followings_from_user(user_id, cookies)
-    if not last_followings:
-        logger.error(ErrorHandler.COOKIES_EXPIRED)
-        await interaction.followup.send(ErrorHandler.DISCORD_MSG_ERROR)
+    await interaction.response.send_message(f"Je vais m'occuper de récuperer les followings de {profil_name} !\nJ'enverrais une notification quand l'opération sera terminée")
 
-    last_followings = convert_list_list_dict_to_list_dict(last_followings)
-    await create_excel_file(last_followings, filename)
+    executor = async_executor.AsyncExecutor(max_concurrent=1)
+    executor.submit(get_followings_from_user_future, user_id, cookies, filename)
+    async for task in executor:
+        await future_result(task, client, user_who_invoked, channel_id_invoked, filename)
 
-    logger.info("Excel file created !\nSending to Discord...")
-    await interaction.followup.send(file=discord.File(filename))
-
-    logger.info("Excel file sended !")
-    await clean_file(filename)
 
 
 @tasks.loop(minutes=15)

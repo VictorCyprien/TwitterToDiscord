@@ -114,6 +114,8 @@ def get_cursor_from_data(data: Dict) -> str:
 async def get_all_followings_from_user(user_id: int, cookies: List[Dict]) -> List[List[Dict]]:
     current_cursor = None
     cursor_in_data = True
+    number_of_retry = 0
+    number_of_requests = 0
     final_data = []
 
     features = {
@@ -159,9 +161,22 @@ async def get_all_followings_from_user(user_id: int, cookies: List[Dict]) -> Lis
         logger.info(f"Request with cursor : {variables.get("cursor", None)}")
         data = await make_request(url, cookies, params)
         if not data:
-            return []
+            if number_of_retry == 3:
+                logger.error("Too many failed attempts, exiting with what we have")
+                break
+            logger.warning("Request failed, retrying in 10 minutes...")
+            number_of_retry += 1
+            number_of_requests = 0
+            await asyncio.sleep(600)
+            continue
 
-        await asyncio.sleep(10)
+        if number_of_requests == 10:
+            logger.info("Waiting 5 minutes to continue requests...")
+            number_of_requests = 0
+            await asyncio.sleep(300)
+        else:
+            await asyncio.sleep(10)
+            number_of_requests += 1
         current_cursor = get_cursor_from_data(data)
         if current_cursor is None:
             cursor_in_data = False
@@ -175,6 +190,8 @@ async def get_all_followings_from_user(user_id: int, cookies: List[Dict]) -> Lis
 async def get_all_followers_from_user(user_id: int, cookies: List[Dict]) -> List[List[Dict]]:
     current_cursor = None
     cursor_in_data = True
+    number_of_retry = 0
+    number_of_requests = 0
     final_data = []
 
     features = {
@@ -220,13 +237,26 @@ async def get_all_followers_from_user(user_id: int, cookies: List[Dict]) -> List
         logger.info(f"Request with cursor : {variables.get("cursor", None)}")
         data = await make_request(url, cookies, params)
         if not data:
-            return []
+            if number_of_retry == 3:
+                logger.error("Too many failed attempts, exiting with what we have")
+                break
+            logger.warning("Request failed, retrying in 10 minutes...")
+            number_of_retry += 1
+            number_of_requests = 0
+            await asyncio.sleep(600)
+            continue
 
-        await asyncio.sleep(10)
+        if number_of_requests == 10:
+            logger.info("Waiting 5 minutes to continue requests...")
+            number_of_requests = 0
+            await asyncio.sleep(300)
+        else:
+            await asyncio.sleep(10)
+            number_of_requests += 1
         current_cursor = get_cursor_from_data(data)
         if current_cursor is None:
             cursor_in_data = False
-
+        
         filtred_data = filter_empty_data(data)
         final_data.append(extract_users_data(filtred_data))
     

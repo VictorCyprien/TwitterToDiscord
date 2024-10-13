@@ -39,3 +39,13 @@ async def send_msg(client: discord.Client, discord_channel_id: int, embed: disco
         await discord_channel.send(embed=embed)
     if filename is not None:
         await discord_channel.send(file=discord.File(filename))
+
+
+async def send_msg_with_ping(client: discord.Client, discord_channel_id: int, user_id: int, msg: str = None, embed: discord.Embed = None, filename: str = None):
+    discord_channel = client.get_channel(discord_channel_id)
+    if embed is not None:
+        await discord_channel.send(f"<@{user_id}>" ,embed=embed)
+    if filename is not None:
+        await discord_channel.send(f"<@{user_id}>", file=discord.File(filename))
+    if embed is None and filename is None:
+        await discord_channel.send(f"<@{user_id}> {msg}")
