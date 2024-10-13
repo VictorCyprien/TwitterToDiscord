@@ -3,7 +3,7 @@ import discord
 
 
 async def build_msg(data_from_twitter: Dict, current_user: str) -> discord.Embed:
-    profile_url = data_from_twitter["url"]
+    profile_url = data_from_twitter["profile_url"]
     name = data_from_twitter["name"]
     description = data_from_twitter["description"]
     profile_image = data_from_twitter["profile_image"]
@@ -39,3 +39,13 @@ async def send_msg(client: discord.Client, discord_channel_id: int, embed: disco
         await discord_channel.send(embed=embed)
     if filename is not None:
         await discord_channel.send(file=discord.File(filename))
+
+
+async def send_msg_with_ping(client: discord.Client, discord_channel_id: int, user_id: int, msg: str = None, embed: discord.Embed = None, filename: str = None):
+    discord_channel = client.get_channel(discord_channel_id)
+    if embed is not None:
+        await discord_channel.send(f"<@{user_id}>" ,embed=embed)
+    if filename is not None:
+        await discord_channel.send(f"<@{user_id}>", file=discord.File(filename))
+    if embed is None and filename is None:
+        await discord_channel.send(f"<@{user_id}> {msg}")

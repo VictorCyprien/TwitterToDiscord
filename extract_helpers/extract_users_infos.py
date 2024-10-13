@@ -4,6 +4,11 @@ from glom import glom
 from datetime import datetime
 
 from .entities import get_entities
+from helpers import Logger
+
+
+logger = Logger()
+
 
 # This allow to remove empty content before getting user info
 def filter_empty_data(data: Dict) -> Dict:
@@ -27,9 +32,15 @@ def extract_urls(list_urls: Dict) -> str:
 
     urls = ""
     if description_urls:
-        urls = urls + description_urls[0]["expanded_url"] + "\n"
+        try:
+            urls = urls + description_urls[0]["expanded_url"] + "\n"
+        except KeyError:
+            logger.error("Unable to get url, proceed...")
     if urls_url:
-        urls = urls + urls_url[0]["expanded_url"] + "\n"
+        try:
+            urls = urls + urls_url[0]["expanded_url"] + "\n"
+        except KeyError:
+            logger.error("Unable to get url, proceed...")
     return urls
 
 
@@ -52,7 +63,7 @@ def extract_users_data(data: Dict) -> List[Dict]:
         urls = extract_urls(list_urls)
 
         current_user = {
-            "url": f"https://x.com/{username}",
+            "profile_url": f"https://x.com/{username}",
             "username": username,
             "name": name,
             "description": description,
