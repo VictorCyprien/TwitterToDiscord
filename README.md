@@ -150,7 +150,6 @@ make logs
 ```bash
 TwitterToDiscord/
 ├── main.py                 # Main Discord bot application
-├── twitter.py              # Twitter API interaction functions
 ├── export_cookies.py       # Cookie extraction utility
 ├── requirements.txt        # Python dependencies
 ├── Dockerfile             # Docker configuration
