@@ -169,10 +169,16 @@ TwitterToDiscord/
 │   ├── __init__.py
 │   ├── build_msg.py      # Message building functions
 │   └── set_activity.py   # Bot activity management
-└── extract_helpers/      # Data extraction utilities
-    ├── __init__.py
-    ├── entities.py       # Entity extraction
-    └── extract_users_infos.py  # User information extraction
+├── extract_helpers/      # Data extraction utilities
+│   ├── __init__.py
+│   ├── entities.py       # Entity extraction
+│   └── extract_users_infos.py  # User information extraction
+├── twitter/              # Twitter automation and login
+│   ├── __init__.py
+│   ├── get_twitter_data.py  # Twitter data retrieval functions
+│   ├── login.py          # Twitter login automation
+│   └── create_driver.py  # Browser driver creation
+└── venv/                 # Python virtual environment (created after setup)
 ```
 
 ## 🔧 Configuration Details
